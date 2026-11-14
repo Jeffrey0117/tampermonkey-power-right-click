@@ -1,0 +1,16 @@
+{
+  "name": "power-right-click",
+  "version": "0.1.0",
+  "private": true,
+  "description": "選一段字、右鍵、存起來。油猴腳本加一個本機收件服務。",
+  "main": "server.js",
+  "scripts": {
+    "init": "node scripts/init.js",
+    "start": "node server.js",
+    "test": "node --test",
+    "autostart": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/autostart.ps1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

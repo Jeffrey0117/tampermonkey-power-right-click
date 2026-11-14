@@ -1,0 +1,35 @@
+{
+  "repo": 1,
+  "name": "power-right-click",
+  "what": "在網頁上選一段字、按右鍵、點「存起來」，那段字就連同來源網址變成本機的一個檔；右鍵選單之後可以再加別的動作。",
+  "kind": "tool",
+  "status": "building",
+  "work": {
+    "guide": "README.md",
+    "run": "npm start",
+    "test": "npm test"
+  },
+  "offers": [
+    {
+      "id": "drop",
+      "what": "把一段文字（可帶來源網址與標題）交給收件服務執行某個動作，目前只有 save：存成檔。想從別的腳本或工具把文字丟進同一個資料夾時用。",
+      "how": "http",
+      "http": {
+        "method": "POST",
+        "path": "/drop",
+        "auth": "bearer",
+        "params": {
+          "type": "object",
+          "required": ["action", "kind", "text"],
+          "properties": {
+            "action": { "type": "string", "enum": ["save"] },
+            "kind": { "type": "string", "enum": ["text"] },
+            "text": { "type": "string" },
+            "url": { "type": "string" },
+            "title": { "type": "string" }
+          }
+        }
+      }
+    }
+  ]
+}
