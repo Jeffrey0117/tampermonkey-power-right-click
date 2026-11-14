@@ -1,8 +1,11 @@
 // ==UserScript==
 // @name         強力右鍵
 // @namespace    power-right-click
-// @version      0.1.0
+// @version      0.1.1
 // @description  選一段字、右鍵、存起來。Shift + 右鍵 = 原本的選單。
+// @homepageURL  https://github.com/Jeffrey0117/tampermonkey-power-right-click
+// @updateURL    https://raw.githubusercontent.com/Jeffrey0117/tampermonkey-power-right-click/main/power-right-click.user.js
+// @downloadURL  https://raw.githubusercontent.com/Jeffrey0117/tampermonkey-power-right-click/main/power-right-click.user.js
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue

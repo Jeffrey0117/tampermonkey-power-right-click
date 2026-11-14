@@ -1,6 +1,6 @@
 {
   "repo": 1,
-  "name": "power-right-click",
+  "name": "tampermonkey-power-right-click",
   "what": "在網頁上選一段字、按右鍵、點「存起來」，那段字就連同來源網址變成本機的一個檔；右鍵選單之後可以再加別的動作。",
   "kind": "tool",
   "status": "building",
