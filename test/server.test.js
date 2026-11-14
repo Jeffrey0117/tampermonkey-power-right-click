@@ -11,10 +11,11 @@ const TOKEN = 'test-token-0123456789';
 
 async function boot() {
   const dropDir = fs.mkdtempSync(path.join(os.tmpdir(), 'prc-'));
-  const server = createServer({ token: TOKEN, dropDir, port: 0, host: '127.0.0.1' });
+  const revealed = [];
+  const server = createServer({ token: TOKEN, dropDir, reveal: (dir) => revealed.push(dir) });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const port = server.address().port;
-  return { dropDir, port, close: () => new Promise((r) => server.close(r)) };
+  return { dropDir, port, revealed, close: () => new Promise((r) => server.close(r)) };
 }
 
 // Raw request so tests can set Host and other headers freely.
@@ -131,6 +132,19 @@ test('menu: lists the save action', async () => {
     const r = await request(s.port, { pathname: '/menu', headers: { authorization: `Bearer ${TOKEN}` } });
     assert.equal(r.status, 200);
     assert.deepEqual(r.json.items, [{ id: 'save', label: '存起來', accepts: ['text'] }]);
+  } finally { await s.close(); }
+});
+
+test('reveal: with the token, opens the drop folder; without it, refuses', async () => {
+  const s = await boot();
+  try {
+    const no = await request(s.port, { method: 'POST', pathname: '/reveal' });
+    assert.equal(no.status, 401);
+    assert.deepEqual(s.revealed, []);
+    const ok = await request(s.port, { method: 'POST', pathname: '/reveal', headers: { authorization: `Bearer ${TOKEN}` } });
+    assert.equal(ok.status, 200);
+    assert.equal(ok.json.ok, true);
+    assert.deepEqual(s.revealed, [s.dropDir]);
   } finally { await s.close(); }
 });
 

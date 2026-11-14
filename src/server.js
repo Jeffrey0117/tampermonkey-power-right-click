@@ -87,12 +87,17 @@ async function route(req, res, config) {
     return res.end(fs.readFileSync(USERSCRIPT_PATH));
   }
 
-  if (key === 'GET /menu' || key === 'POST /drop') {
+  if (key === 'GET /menu' || key === 'POST /drop' || key === 'POST /reveal') {
     if (!tokenMatches(req, config.token)) {
       req.resume();
       throw new HttpError(401, '金鑰不對');
     }
     if (key === 'GET /menu') return sendJson(res, 200, { items: menuItems() });
+    if (key === 'POST /reveal') {
+      req.resume();
+      config.reveal(config.dropDir);
+      return sendJson(res, 200, { ok: true });
+    }
     return handleDrop(req, res, config);
   }
 
@@ -103,6 +108,7 @@ async function route(req, res, config) {
 function createServer(config) {
   if (!config || !config.token) throw new Error('createServer: token is required');
   if (!config.dropDir) throw new Error('createServer: dropDir is required');
+  if (!config.reveal) config = { ...config, reveal: require('./reveal').revealInFileManager };
   return http.createServer((req, res) => {
     route(req, res, config).catch((err) => {
       const status = err instanceof HttpError ? err.status : 500;

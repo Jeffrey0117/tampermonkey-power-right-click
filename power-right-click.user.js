@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         強力右鍵
 // @namespace    power-right-click
-// @version      0.1.1
+// @version      0.1.2
 // @description  選一段字、右鍵、存起來。Shift + 右鍵 = 原本的選單。
 // @homepageURL  https://github.com/Jeffrey0117/tampermonkey-power-right-click
 // @updateURL    https://raw.githubusercontent.com/Jeffrey0117/tampermonkey-power-right-click/main/power-right-click.user.js
@@ -90,6 +90,8 @@
     .toast { right: 18px; bottom: 18px; max-width: 320px; padding: 10px 14px; background: #1F1B16; color: #fff;
              border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); word-break: break-all; }
     .toast.bad { background: #B4412F; }
+    .toast.clickable { cursor: pointer; }
+    .toast.clickable:hover { background: #332c24; }
   `;
 
   let root = null;
@@ -112,16 +114,26 @@
     if (menuEl) { menuEl.remove(); menuEl = null; }
   }
 
-  function toast(message, bad) {
+  function toast(message, bad, onClick) {
     const r = shadow();
     const old = r.querySelector('.toast');
     if (old) old.remove();
     const el = document.createElement('div');
     el.className = bad ? 'toast bad' : 'toast';
     el.textContent = message;
+    if (onClick) {
+      el.classList.add('clickable');
+      el.title = '打開資料夾';
+      el.addEventListener('click', onClick);
+    }
     r.appendChild(el);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.remove(), TOAST_MS);
+  }
+
+  function revealFolder() {
+    if (!token()) return;
+    call('POST', '/reveal').catch(() => { /* best effort */ });
   }
 
   function runItem(item, text) {
@@ -130,7 +142,7 @@
       return;
     }
     call('POST', '/drop', { action: item.id, kind: 'text', text, url: location.href, title: document.title })
-      .then((data) => toast('已存 ' + (data.name || '')))
+      .then((data) => toast('已存 ' + (data.name || '') + ' ·（點我打開資料夾）', false, revealFolder))
       .catch((err) => toast('沒存成：' + err.message, true));
   }
 
