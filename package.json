@@ -1,8 +1,8 @@
 {
   "name": "tampermonkey-power-right-click",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": true,
-  "description": "選一段字、右鍵、存起來。油猴腳本加一個本機收件服務。",
+  "description": "選一段字、右鍵：存起來，或直接改掉自己網站上的字。油猴腳本加一個本機收件服務。",
   "main": "server.js",
   "scripts": {
     "init": "node scripts/init.js",

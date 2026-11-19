@@ -29,6 +29,11 @@ function loadConfig(env = process.env) {
     port,
     host: merged.HOST || '127.0.0.1',
     dropDir: merged.DROP_DIR || path.join(os.homedir(), 'Documents', 'power-right-click'),
+    retext: {
+      stateDir: merged.PRC_HOME || path.join(os.homedir(), '.power-right-click'),
+      // Where your site repos live. Default: the folder this repo sits in.
+      roots: (merged.RETEXT_ROOTS || path.resolve(__dirname, '..', '..')).split(path.delimiter).filter(Boolean),
+    },
   };
 }
 
