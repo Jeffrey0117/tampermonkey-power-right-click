@@ -5,9 +5,6 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { menuItems, findAction } = require('./actions');
 const { isDirectLocalVisit, renderSetupPage, SETUP_HEADERS } = require('./setup-page');
-const retext = require('./retext');
-
-const RETEXT_ROUTES = ['POST /retext', 'POST /retext/submit', 'GET /retext/pending'];
 
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const USERSCRIPT_PATH = path.join(__dirname, '..', 'power-right-click.user.js');
@@ -47,24 +44,12 @@ function readBody(req) {
   });
 }
 
-// A web page can POST text/plain cross-site without a preflight; JSON it cannot.
-async function readJson(req) {
-  if (!/^application\/json\b/i.test(req.headers['content-type'] || '')) {
-    req.resume();
-    throw new HttpError(415, '只收 application/json');
-  }
+function parseDrop(raw) {
   let data;
-  try { data = JSON.parse(await readBody(req)); } catch (err) {
-    if (err instanceof HttpError) throw err;
-    throw new HttpError(400, '不是 JSON');
-  }
+  try { data = JSON.parse(raw); } catch (_) { throw new HttpError(400, '不是 JSON'); }
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new HttpError(400, '格式不對');
-  return data;
-}
-
-function parseDrop(data) {
   const action = findAction(data.action);
-  if (!action || !action.run) throw new HttpError(400, '沒有這個動作');
+  if (!action) throw new HttpError(400, '沒有這個動作');
   if (!action.accepts.includes(data.kind)) throw new HttpError(400, '這個動作不收這種內容');
   if (typeof data.text !== 'string' || !data.text.trim()) throw new HttpError(400, '沒有內容');
   const payload = {
@@ -76,21 +61,17 @@ function parseDrop(data) {
 }
 
 async function handleDrop(req, res, config) {
-  const { action, payload } = parseDrop(await readJson(req));
+  if (!/^application\/json\b/i.test(req.headers['content-type'] || '')) {
+    req.resume();
+    throw new HttpError(415, '只收 application/json');
+  }
+  const { action, payload } = parseDrop(await readBody(req));
   const result = await action.run({ config, payload });
   sendJson(res, 200, { ok: true, ...result });
 }
 
-async function handleRetext(key, req, res, config, searchParams) {
-  let input = { host: searchParams.get('host') || '' };
-  if (req.method === 'POST') input = await readJson(req);
-  else req.resume();
-  const out = await retext.handle(key, input, config.retext);
-  sendJson(res, out.status, out.body);
-}
-
 async function route(req, res, config) {
-  const { pathname, searchParams } = new URL(req.url, 'http://local');
+  const { pathname } = new URL(req.url, 'http://local');
   const key = `${req.method} ${pathname}`;
 
   if (key === 'GET /health') return sendJson(res, 200, { ok: true });
@@ -106,12 +87,11 @@ async function route(req, res, config) {
     return res.end(fs.readFileSync(USERSCRIPT_PATH));
   }
 
-  if (key === 'GET /menu' || key === 'POST /drop' || key === 'POST /reveal' || RETEXT_ROUTES.includes(key)) {
+  if (key === 'GET /menu' || key === 'POST /drop' || key === 'POST /reveal') {
     if (!tokenMatches(req, config.token)) {
       req.resume();
       throw new HttpError(401, '金鑰不對');
     }
-    if (RETEXT_ROUTES.includes(key)) return handleRetext(key, req, res, config, searchParams);
     if (key === 'GET /menu') return sendJson(res, 200, { items: menuItems() });
     if (key === 'POST /reveal') {
       req.resume();

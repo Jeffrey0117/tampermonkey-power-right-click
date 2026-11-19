@@ -131,10 +131,7 @@ test('menu: lists the save action', async () => {
   try {
     const r = await request(s.port, { pathname: '/menu', headers: { authorization: `Bearer ${TOKEN}` } });
     assert.equal(r.status, 200);
-    assert.deepEqual(r.json.items, [
-      { id: 'save', label: '存起來', accepts: ['text'] },
-      { id: 'retext', label: '改這段字', accepts: ['text'], ui: 'retext' },
-    ]);
+    assert.deepEqual(r.json.items, [{ id: 'save', label: '存起來', accepts: ['text'] }]);
   } finally { await s.close(); }
 });
 
